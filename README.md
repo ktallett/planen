@@ -1,8 +1,12 @@
-# Planen - Gantt Chart Creator
+# Planen
 
-A lightweight, open-source Gantt chart creator for planning projects with tasks and subtasks. Works as a web app or desktop application on Linux, Mac, and Windows.
+**A lightweight, open-source Gantt chart creator that works everywhere.**
+
+Plan projects with visual timelines, customizable tasks, and automatic scheduling. No cloud required - your data stays on your device. Available as a web app or native desktop application for Linux, Mac, and Windows.
 
 ![License](https://img.shields.io/badge/license-GPL--3.0-blue.svg)
+
+---
 
 ## Features
 
