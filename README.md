@@ -1,4 +1,4 @@
-# Planen
+# planen
 
 **A lightweight, open-source Gantt chart creator that works everywhere.**
 
