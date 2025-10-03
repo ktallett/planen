@@ -1,4 +1,4 @@
-# Planen
+# planen
 
 **A lightweight, open-source Gantt chart creator that works everywhere.**
 
@@ -112,19 +112,8 @@ Run the `.msi` installer or use the `.exe` portable version.
 
 ## Data Storage
 
-- **Local-first**: All data is stored in your browser's IndexedDB
-- **Persistent**: Data survives browser restarts and computer reboots
-- **Private**: Data never leaves your computer (unless you enable optional Supabase sync)
 - **Backup**: Export to JSON regularly for backups
 
-## Optional Cloud Sync (Advanced)
-
-To enable cloud sync with Supabase:
-
-1. Create a free Supabase project at https://supabase.com
-2. Copy `.env.example` to `.env`
-3. Add your Supabase URL and anon key
-4. Set up database schema (see `src/lib/supabase.js` for table structure)
 
 ## Development
 
@@ -162,17 +151,10 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 
 Contributions are welcome! Please feel free to submit issues and pull requests.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
 ## Support
 
 - 📖 Click the **?** button in the app for help
-- 🐛 [Report bugs](https://github.com/yourusername/planen/issues)
-- 💡 [Request features](https://github.com/yourusername/planen/issues)
+
 
 ## Credits
 
