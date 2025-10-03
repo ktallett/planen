@@ -1,18 +1,46 @@
-import Dexie from 'dexie';
+// Simple localStorage-based storage for better reliability
+const STORAGE_KEY = 'planen_charts';
 
-export const db = new Dexie('planenDB');
+// Get next available ID
+const getNextId = (charts) => {
+  if (charts.length === 0) return 1;
+  return Math.max(...charts.map(c => c.id)) + 1;
+};
 
-// Define database schema
-db.version(1).stores({
-  charts: '++id, title, createdAt, updatedAt',
-});
+// Load all charts from localStorage
+const loadCharts = () => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return [];
+    const charts = JSON.parse(stored);
+    console.log('Loaded charts from localStorage:', charts);
+    return charts;
+  } catch (error) {
+    console.error('Error loading charts:', error);
+    return [];
+  }
+};
+
+// Save all charts to localStorage
+const saveCharts = (charts) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(charts));
+    console.log('Saved charts to localStorage:', charts);
+    return true;
+  } catch (error) {
+    console.error('Error saving charts:', error);
+    return false;
+  }
+};
 
 // Chart model helper functions
 export const chartDB = {
   // Create a new chart
   async create(chartData) {
+    const charts = loadCharts();
     const now = new Date().toISOString();
     const chart = {
+      id: getNextId(charts),
       title: chartData.title || 'Untitled Chart',
       timeRange: chartData.timeRange || {
         start: new Date().toISOString().split('T')[0],
@@ -22,38 +50,49 @@ export const chartDB = {
       createdAt: now,
       updatedAt: now,
     };
-    const id = await db.charts.add(chart);
-    return { ...chart, id };
+    charts.push(chart);
+    saveCharts(charts);
+    return chart;
   },
 
   // Get a chart by ID
   async get(id) {
-    return await db.charts.get(id);
+    const charts = loadCharts();
+    return charts.find(c => c.id === id);
   },
 
   // Get all charts
   async getAll() {
-    return await db.charts.orderBy('updatedAt').reverse().toArray();
+    const charts = loadCharts();
+    return charts.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
   },
 
   // Update a chart
   async update(id, updates) {
+    const charts = loadCharts();
+    const index = charts.findIndex(c => c.id === id);
+    if (index === -1) return null;
+
     const now = new Date().toISOString();
-    await db.charts.update(id, {
+    charts[index] = {
+      ...charts[index],
       ...updates,
       updatedAt: now,
-    });
-    return await db.charts.get(id);
+    };
+    saveCharts(charts);
+    return charts[index];
   },
 
   // Delete a chart
   async delete(id) {
-    await db.charts.delete(id);
+    const charts = loadCharts();
+    const filtered = charts.filter(c => c.id !== id);
+    saveCharts(filtered);
   },
 
   // Export chart as JSON
   async export(id) {
-    const chart = await db.charts.get(id);
+    const chart = await this.get(id);
     return JSON.stringify(chart, null, 2);
   },
 

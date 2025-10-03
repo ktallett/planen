@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
 import { chartDB } from './lib/db';
 import GanttChart from './components/GanttChart';
 import TaskEditor from './components/TaskEditor';
@@ -16,57 +15,54 @@ export default function App() {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const ganttRef = useRef(null);
-
-  // Load all charts from IndexedDB
-  const charts = useLiveQuery(() => chartDB.getAll(), []);
 
   // Load the first chart or create a default one
   useEffect(() => {
     const loadChart = async () => {
-      if (!currentChart) {
-        if (charts && charts.length > 0) {
-          setCurrentChart(charts[0]);
-        } else {
-          // Create a default chart with sample data
-          const newChart = await chartDB.create({
-            title: 'My First Project',
-            timeRange: {
+      const charts = await chartDB.getAll();
+      if (charts && charts.length > 0) {
+        setCurrentChart(charts[0]);
+      } else {
+        // Create a default chart with sample data
+        const newChart = await chartDB.create({
+          title: 'My First Project',
+          timeRange: {
+            start: '2025-10-01',
+            end: '2025-12-31',
+          },
+          tasks: [
+            {
+              id: '1',
+              name: 'Project Planning',
               start: '2025-10-01',
-              end: '2025-12-31',
+              end: '2025-10-15',
+              color: '#3b82f6',
+              subtasks: [
+                {
+                  id: '1-1',
+                  name: 'Requirements Gathering',
+                  start: '2025-10-01',
+                  end: '2025-10-07',
+                  color: '#60a5fa',
+                },
+              ],
             },
-            tasks: [
-              {
-                id: '1',
-                name: 'Project Planning',
-                start: '2025-10-01',
-                end: '2025-10-15',
-                color: '#3b82f6',
-                subtasks: [
-                  {
-                    id: '1-1',
-                    name: 'Requirements Gathering',
-                    start: '2025-10-01',
-                    end: '2025-10-07',
-                    color: '#60a5fa',
-                  },
-                ],
-              },
-              {
-                id: '2',
-                name: 'Development',
-                start: '2025-10-16',
-                end: '2025-11-30',
-                color: '#10b981',
-              },
-            ],
-          });
-          setCurrentChart(newChart);
-        }
+            {
+              id: '2',
+              name: 'Development',
+              start: '2025-10-16',
+              end: '2025-11-30',
+              color: '#10b981',
+            },
+          ],
+        });
+        setCurrentChart(newChart);
       }
     };
     loadChart();
-  }, [charts, currentChart]);
+  }, [refreshTrigger]);
 
   const handleSaveTask = async (taskData) => {
     if (!currentChart) return;
@@ -143,6 +139,55 @@ export default function App() {
 
     // Reset the file input
     event.target.value = '';
+  };
+
+  const handleNewChart = async () => {
+    if (!currentChart) return;
+
+    // Check if current chart is already empty
+    if (currentChart.tasks.length === 0) {
+      alert('Current chart is already empty. No need to create a new one.');
+      return;
+    }
+
+    // First export current chart as JSON
+    const confirmNew = window.confirm(
+      'This will save your current chart as JSON and start a new chart. Continue?'
+    );
+
+    if (!confirmNew) return;
+
+    // Auto-export current chart
+    const json = await chartDB.export(currentChart.id);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${currentChart.title}_backup.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    // Small delay to ensure download starts
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Delete old chart from localStorage
+    await chartDB.delete(currentChart.id);
+
+    // Create new empty chart
+    const newChart = await chartDB.create({
+      title: 'New Project',
+      timeRange: {
+        start: new Date().toISOString().split('T')[0],
+        end: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      },
+      tasks: [],
+    });
+
+    // Force update the state and unlock
+    setCurrentChart(newChart);
+    setShowTaskEditor(false);
+    setEditingTask(null);
+    setIsLocked(false);
   };
 
   const handleExport = async (format) => {
@@ -325,6 +370,11 @@ export default function App() {
                 <h3>📥 Import</h3>
                 <p>Click "Import JSON" to load a previously exported chart and continue editing.</p>
               </section>
+
+              <section>
+                <h3>🆕 New Chart</h3>
+                <p>Click "New Chart" to start a fresh chart. Your current chart will be automatically saved as JSON before starting new.</p>
+              </section>
             </div>
           </div>
         </div>
@@ -333,9 +383,6 @@ export default function App() {
       <header className="app-header">
         <div className="header-left">
           <h1>Planen</h1>
-          <button className="help-button" onClick={() => setShowHelp(true)} title="Help">
-            ?
-          </button>
         </div>
         <div className="header-actions">
           <label className="view-mode-label">
@@ -352,11 +399,21 @@ export default function App() {
               <option value="Month">Month</option>
             </select>
           </label>
+          <button className="help-button" onClick={() => setShowHelp(true)} title="Help">
+            ?
+          </button>
           <button
             onClick={() => setIsLocked(!isLocked)}
             className={isLocked ? 'btn-lock locked' : 'btn-lock unlocked'}
           >
             {isLocked ? '🔒 Locked' : '🔓 Unlocked'}
+          </button>
+          <button
+            onClick={handleNewChart}
+            className="btn-secondary"
+            title="Start new chart (saves current as JSON)"
+          >
+            New Chart
           </button>
           <button
             onClick={() => {
