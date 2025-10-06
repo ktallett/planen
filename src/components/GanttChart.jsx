@@ -194,7 +194,7 @@ export default function GanttChart({ tasks, onTaskClick, viewMode = 'Day' }) {
               weekLine.setAttribute('y1', '0');
               weekLine.setAttribute('x2', x);
               weekLine.setAttribute('y2', svgHeight);
-              weekLine.style.stroke = '#9ca3af';
+              weekLine.style.stroke = '#b0b7c0';
               weekLine.style.strokeWidth = '1';
               weekLine.style.strokeDasharray = 'none';
               weekLine.style.opacity = '0.6';
