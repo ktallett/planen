@@ -1,10 +1,12 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Gantt from 'frappe-gantt';
 import 'frappe-gantt/dist/frappe-gantt.css';
 
 export default function GanttChart({ tasks, onTaskClick, viewMode = 'Day' }) {
   const ganttContainer = useRef(null);
   const ganttInstance = useRef(null);
+  const touchState = useRef({ startX: 0, startY: 0, lastX: 0, lastY: 0, isDragging: false, pinchDistance: 0 });
+  const [scale, setScale] = useState(1);
 
   useEffect(() => {
     if (!ganttContainer.current || !tasks || tasks.length === 0) return;
@@ -93,6 +95,7 @@ export default function GanttChart({ tasks, onTaskClick, viewMode = 'Day' }) {
     ganttInstance.current = new Gantt(ganttContainer.current, ganttTasks, {
       view_mode: viewMode,
       date_format: 'YYYY-MM-DD',
+      padding: 18,
       on_click: (task) => {
         if (onTaskClick) onTaskClick(task);
       },
@@ -104,14 +107,122 @@ export default function GanttChart({ tasks, onTaskClick, viewMode = 'Day' }) {
       },
     });
 
-    // After Gantt is created, apply text colors directly to SVG elements
+    // After Gantt is created, apply text colors and add week numbers
     setTimeout(() => {
       const svg = ganttContainer.current.querySelector('svg');
       if (svg) {
         console.log('Applying text colors to SVG elements');
 
-        // First, set all text to dark color
-        const allTexts = svg.querySelectorAll('text');
+        // Trim SVG height to remove excess whitespace at bottom
+        const ganttGroup = svg.querySelector('.gantt');
+        if (ganttGroup) {
+          const bbox = ganttGroup.getBBox();
+          const newHeight = bbox.y + bbox.height + 20; // Add small padding
+          svg.setAttribute('height', newHeight);
+        }
+
+        // Add week numbers
+        const allDates = [];
+        tasks.forEach(task => {
+          allDates.push(new Date(task.start));
+          allDates.push(new Date(task.end));
+          if (task.subtasks) {
+            task.subtasks.forEach(subtask => {
+              allDates.push(new Date(subtask.start));
+              allDates.push(new Date(subtask.end));
+            });
+          }
+        });
+
+        if (allDates.length > 0) {
+          const startDate = new Date(Math.min(...allDates));
+          const endDate = new Date(Math.max(...allDates));
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(0, 0, 0, 0);
+
+          // Calculate number of weeks
+          const diffTime = endDate.getTime() - startDate.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          const numWeeks = Math.ceil(diffDays / 7);
+
+          // Create week labels group
+          let weekLabelsGroup = svg.querySelector('.week-labels-group');
+          if (!weekLabelsGroup) {
+            weekLabelsGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            weekLabelsGroup.setAttribute('class', 'week-labels-group');
+            svg.appendChild(weekLabelsGroup); // Append to end so it's on top
+          } else {
+            weekLabelsGroup.innerHTML = '';
+          }
+
+          // Get all bars and find the actual leftmost and rightmost positions
+          const gridBars = svg.querySelectorAll('.bar');
+          if (gridBars.length > 0) {
+            let minX = Infinity;
+            let maxX = -Infinity;
+
+            gridBars.forEach(bar => {
+              const bbox = bar.getBBox();
+              minX = Math.min(minX, bbox.x);
+              maxX = Math.max(maxX, bbox.x + bbox.width);
+            });
+
+            const chartStart = minX;
+            const chartEnd = maxX;
+            const chartWidth = chartEnd - chartStart;
+            const weekWidth = chartWidth / numWeeks;
+
+            // Add background rectangle for week numbers
+            const weekBgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            weekBgRect.setAttribute('x', chartStart);
+            weekBgRect.setAttribute('y', '0');
+            weekBgRect.setAttribute('width', chartWidth);
+            weekBgRect.setAttribute('height', '25');
+            weekBgRect.style.fill = '#f8fafc';
+            weekBgRect.style.stroke = '#e2e8f0';
+            weekBgRect.style.strokeWidth = '1';
+            weekLabelsGroup.appendChild(weekBgRect);
+
+            // Get SVG height to draw vertical lines
+            const svgHeight = svg.getBBox().height;
+
+            // Add vertical lines for week boundaries
+            for (let i = 1; i < numWeeks; i++) {
+              const weekLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+              const x = chartStart + (i * weekWidth);
+              weekLine.setAttribute('x1', x);
+              weekLine.setAttribute('y1', '0');
+              weekLine.setAttribute('x2', x);
+              weekLine.setAttribute('y2', svgHeight);
+              weekLine.style.stroke = '#9ca3af';
+              weekLine.style.strokeWidth = '1';
+              weekLine.style.strokeDasharray = 'none';
+              weekLine.style.opacity = '0.6';
+              weekLine.style.pointerEvents = 'none';
+              weekLabelsGroup.appendChild(weekLine);
+            }
+
+            // Add week number labels (show every other week in Month view)
+            const skipInterval = viewMode === 'Month' ? 2 : 1;
+            for (let i = 0; i < numWeeks; i += skipInterval) {
+              const weekText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+              const x = chartStart + (i * weekWidth) + (weekWidth / 2);
+              weekText.setAttribute('x', x);
+              weekText.setAttribute('y', '17');
+              weekText.setAttribute('text-anchor', 'middle');
+              weekText.setAttribute('font-size', '12');
+              weekText.setAttribute('font-weight', '700');
+              weekText.setAttribute('class', 'week-number-label');
+              weekText.style.fill = '#3b82f6';
+              weekText.style.pointerEvents = 'none';
+              weekText.textContent = `W${i + 1}`;
+              weekLabelsGroup.appendChild(weekText);
+            }
+          }
+        }
+
+        // First, set all text to dark color (except week labels)
+        const allTexts = svg.querySelectorAll('text:not(.week-number-label)');
         allTexts.forEach(textEl => {
           textEl.setAttribute('fill', '#1e293b');
           textEl.style.setProperty('fill', '#1e293b', 'important');
@@ -194,9 +305,81 @@ export default function GanttChart({ tasks, onTaskClick, viewMode = 'Day' }) {
     };
   }, [tasks, viewMode, onTaskClick]);
 
+  // Touch event handlers for mobile
+  useEffect(() => {
+    const container = ganttContainer.current;
+    if (!container) return;
+
+    const handleTouchStart = (e) => {
+      if (e.touches.length === 1) {
+        touchState.current.isDragging = true;
+        touchState.current.startX = e.touches[0].clientX;
+        touchState.current.startY = e.touches[0].clientY;
+        touchState.current.lastX = container.scrollLeft;
+        touchState.current.lastY = container.scrollTop;
+      } else if (e.touches.length === 2) {
+        // Pinch to zoom
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        const distance = Math.hypot(
+          touch2.clientX - touch1.clientX,
+          touch2.clientY - touch1.clientY
+        );
+        touchState.current.pinchDistance = distance;
+      }
+    };
+
+    const handleTouchMove = (e) => {
+      if (e.touches.length === 1 && touchState.current.isDragging) {
+        e.preventDefault();
+        const deltaX = touchState.current.startX - e.touches[0].clientX;
+        const deltaY = touchState.current.startY - e.touches[0].clientY;
+        container.scrollLeft = touchState.current.lastX + deltaX;
+        container.scrollTop = touchState.current.lastY + deltaY;
+      } else if (e.touches.length === 2) {
+        e.preventDefault();
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        const distance = Math.hypot(
+          touch2.clientX - touch1.clientX,
+          touch2.clientY - touch1.clientY
+        );
+
+        if (touchState.current.pinchDistance > 0) {
+          const delta = distance - touchState.current.pinchDistance;
+          const newScale = Math.max(0.5, Math.min(3, scale + delta * 0.01));
+          setScale(newScale);
+        }
+        touchState.current.pinchDistance = distance;
+      }
+    };
+
+    const handleTouchEnd = () => {
+      touchState.current.isDragging = false;
+      touchState.current.pinchDistance = 0;
+    };
+
+    container.addEventListener('touchstart', handleTouchStart, { passive: false });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [scale]);
+
   return (
     <div className="gantt-container">
-      <div ref={ganttContainer}></div>
+      <div
+        ref={ganttContainer}
+        style={{
+          transform: `scale(${scale})`,
+          transformOrigin: 'top left',
+          transition: 'transform 0.1s ease-out'
+        }}
+      ></div>
     </div>
   );
 }

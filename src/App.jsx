@@ -184,6 +184,8 @@ export default function App() {
     });
 
     // Force update the state and unlock
+    setCurrentChart(null); // Clear first to force re-render
+    await new Promise(resolve => setTimeout(resolve, 50));
     setCurrentChart(newChart);
     setShowTaskEditor(false);
     setEditingTask(null);
@@ -375,6 +377,10 @@ export default function App() {
                 <h3>🆕 New Chart</h3>
                 <p>Click "New Chart" to start a fresh chart. Your current chart will be automatically saved as JSON before starting new.</p>
               </section>
+
+              <footer className="help-footer">
+                Created by <a href="https://github.com/ktallett" target="_blank" rel="noopener noreferrer">@ktallett</a> • Licensed under GPL 3.0
+              </footer>
             </div>
           </div>
         </div>
@@ -506,6 +512,10 @@ export default function App() {
           </div>
         )}
       </main>
+
+      <footer className="app-footer">
+        Created by <a href="https://github.com/ktallett" target="_blank" rel="noopener noreferrer">@ktallett</a> • Licensed under GPL 3.0
+      </footer>
     </div>
   );
 }

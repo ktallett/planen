@@ -758,3 +758,46 @@ button {
     font-size: 1.375rem;
   }
 }
+
+/* Footer styles */
+.app-footer {
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: 1rem 2rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.app-footer a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.app-footer a:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+.help-footer {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.help-footer a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.help-footer a:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
