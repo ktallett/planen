@@ -273,6 +273,24 @@ export default function App() {
         const noExportElements = ganttRef.current.querySelectorAll('.no-export');
         noExportElements.forEach(el => el.style.display = 'none');
 
+        // Center the SVG horizontally within the container for export
+        const ganttContainer = ganttRef.current.querySelector('.gantt-container');
+        const svg = ganttContainer?.querySelector('svg');
+
+        const originalContainerStyles = {
+          textAlign: ganttContainer.style.textAlign,
+        };
+        const originalSvgStyles = svg ? {
+          display: svg.style.display,
+          margin: svg.style.margin,
+        } : {};
+
+        ganttContainer.style.textAlign = 'center';
+        if (svg) {
+          svg.style.display = 'inline-block';
+          svg.style.margin = '0 auto';
+        }
+
         const canvas = await html2canvas(ganttRef.current, {
           backgroundColor: '#ffffff',
           scale: 2,
@@ -280,8 +298,13 @@ export default function App() {
           useCORS: true,
         });
 
-        // Restore hidden elements
+        // Restore hidden elements and original styles
         noExportElements.forEach(el => el.style.display = '');
+        ganttContainer.style.textAlign = originalContainerStyles.textAlign;
+        if (svg) {
+          svg.style.display = originalSvgStyles.display;
+          svg.style.margin = originalSvgStyles.margin;
+        }
 
         if (format === 'png') {
           canvas.toBlob((blob) => {
