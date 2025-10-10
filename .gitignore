@@ -25,3 +25,7 @@ dist-ssr
 
 # Tauri
 src-tauri/target
+
+# Tauri signing keys - NEVER COMMIT THESE!
+*.key
+*.sig

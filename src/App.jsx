@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { chartDB } from './lib/db';
 import GanttChart from './components/GanttChart';
 import TaskEditor from './components/TaskEditor';
+import UpdateNotification from './components/UpdateNotification';
+import { useUpdateChecker } from './hooks/useUpdateChecker';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import './App.css';
@@ -17,6 +19,9 @@ export default function App() {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const ganttRef = useRef(null);
+
+  // Auto-update functionality
+  const { updateAvailable, newVersion, refreshApp, dismissUpdate } = useUpdateChecker();
 
   // Load the first chart or create a default one
   useEffect(() => {
@@ -338,6 +343,14 @@ export default function App() {
 
   return (
     <div className="app">
+      {updateAvailable && (
+        <UpdateNotification
+          newVersion={newVersion}
+          onUpdate={refreshApp}
+          onDismiss={dismissUpdate}
+        />
+      )}
+
       {showHelp && (
         <div className="help-modal-overlay" onClick={() => setShowHelp(false)}>
           <div className="help-modal" onClick={(e) => e.stopPropagation()}>

@@ -19,6 +19,7 @@ Plan projects with visual timelines, customizable tasks, and automatic schedulin
 - 🔒 Lock/unlock editing to prevent accidental changes
 - 🖥️ Desktop apps for Linux, Mac, and Windows (~3-5MB)
 - 🌐 Works offline - no internet required
+- 🔄 Automatic update notifications for web and desktop apps
 
 ## Web App
 
@@ -114,6 +115,15 @@ Run the `.msi` installer or use the `.exe` portable version.
 
 - **Backup**: Export to JSON regularly for backups
 
+
+## Auto-Updates
+
+Planen includes automatic update checking:
+
+- **Web App**: Checks for updates hourly and shows a notification when a new version is available
+- **Desktop App**: Checks for updates on startup and can auto-install with one click
+
+For setup instructions, see [AUTO_UPDATE_SETUP.md](AUTO_UPDATE_SETUP.md)
 
 ## Development
 

@@ -6,6 +6,9 @@ export default defineConfig({
   plugins: [react()],
   base: '/',
 
+  // Copy version.json to public assets
+  publicDir: 'public',
+
   // Tauri expects a fixed port, fail if that port is not available
   server: {
     port: 1420,

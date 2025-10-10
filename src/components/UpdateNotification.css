@@ -1,0 +1,126 @@
+.update-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.update-content {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 350px;
+  max-width: 450px;
+}
+
+.update-icon {
+  font-size: 32px;
+  animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.update-message {
+  flex: 1;
+}
+
+.update-message strong {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.update-message p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.update-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-update,
+.btn-dismiss {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-update {
+  background: white;
+  color: #667eea;
+}
+
+.btn-update:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+}
+
+.btn-dismiss {
+  background: transparent;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.btn-dismiss:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: white;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 600px) {
+  .update-notification {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+  }
+
+  .update-content {
+    min-width: auto;
+    max-width: none;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .update-actions {
+    flex-direction: row;
+    width: 100%;
+  }
+
+  .btn-update,
+  .btn-dismiss {
+    flex: 1;
+  }
+}
