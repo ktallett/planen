@@ -29,3 +29,6 @@ src-tauri/target
 # Tauri signing keys - NEVER COMMIT THESE!
 *.key
 *.sig
+
+# Claude Code
+.claude
